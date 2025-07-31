@@ -1,16 +1,25 @@
+# courses/serializers.py
 from rest_framework import serializers
-from .models import Course, Lesson   # ✅ импортируем модели
-
-
-class CourseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        fields = ['id', 'title', 'description', 'owner']
-        read_only_fields = ['owner']
-
+from .models import Lesson, Course, Subscription
+from .validators import validate_youtube_link
 
 class LessonSerializer(serializers.ModelSerializer):
+    video_url = serializers.URLField(validators=[validate_youtube_link])
+
     class Meta:
         model = Lesson
-        fields = ['id', 'title', 'content', 'course', 'owner']
-        read_only_fields = ['owner']
+        fields = "__all__"
+
+class CourseSerializer(serializers.ModelSerializer):
+    lessons = LessonSerializer(many=True, read_only=True)
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ["id", "title", "lessons", "is_subscribed"]
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return Subscription.objects.filter(user=user, course=obj).exists()
+        return False

@@ -1,60 +1,56 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
-from users.permissions import IsModerator, IsOwner
-from .models import Course, Lesson
+# courses/views.py
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView
+from django.shortcuts import get_object_or_404
+from .models import Course, Lesson, Subscription
 from .serializers import CourseSerializer, LessonSerializer
+from .paginators import CustomPagination
 
+# ==== CRUD для курсов ====
+class CourseListView(ListAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
+    pagination_class = CustomPagination
 
-class CourseViewSet(viewsets.ModelViewSet):
+class CourseDetailView(RetrieveAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
 
-    def perform_create(self, serializer):
-        # 🔒 Модераторы не могут создавать курсы
-        if self.request.user.groups.filter(name='Модераторы').exists():
-            raise PermissionDenied("Модератор не может создавать курсы.")
-        serializer.save(owner=self.request.user)
+class CourseCreateView(CreateAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
 
-    def destroy(self, request, *args, **kwargs):
-        # 🔒 Модераторы не могут удалять курсы
-        if request.user.groups.filter(name='Модераторы').exists():
-            raise PermissionDenied("Модератор не может удалять курсы.")
-        return super().destroy(request, *args, **kwargs)
+class CourseUpdateView(UpdateAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
 
-    def get_permissions(self):
-        """
-        Права доступа:
-        - update/partial_update → владелец или модератор
-        - все остальные → авторизованные пользователи
-        """
-        if self.action in ['update', 'partial_update']:
-            return [IsAuthenticated(), IsModerator() | IsOwner()]
-        return [IsAuthenticated()]
+class CourseDeleteView(DestroyAPIView):
+    queryset = Course.objects.all()
+    serializer_class = CourseSerializer
 
+# ==== CRUD для уроков ====
+class LessonListView(ListAPIView):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    pagination_class = CustomPagination
 
-class LessonViewSet(viewsets.ModelViewSet):
+class LessonCreateView(CreateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
 
-    def perform_create(self, serializer):
-        # 🔒 Модераторы не могут создавать уроки
-        if self.request.user.groups.filter(name='Модераторы').exists():
-            raise PermissionDenied("Модератор не может создавать уроки.")
-        serializer.save(owner=self.request.user)
+# ==== Подписки ====
+class SubscriptionView(APIView):
+    def post(self, request):
+        user = request.user
+        course_id = request.data.get("course_id")
+        course = get_object_or_404(Course, id=course_id)
 
-    def destroy(self, request, *args, **kwargs):
-        # 🔒 Модераторы не могут удалять уроки
-        if request.user.groups.filter(name='Модераторы').exists():
-            raise PermissionDenied("Модератор не может удалять уроки.")
-        return super().destroy(request, *args, **kwargs)
-
-    def get_permissions(self):
-        """
-        Права доступа:
-        - update/partial_update → владелец или модератор
-        - все остальные → авторизованные пользователи
-        """
-        if self.action in ['update', 'partial_update']:
-            return [IsAuthenticated(), IsModerator() | IsOwner()]
-        return [IsAuthenticated()]
+        subscription = Subscription.objects.filter(user=user, course=course)
+        if subscription.exists():
+            subscription.delete()
+            message = "Подписка удалена"
+        else:
+            Subscription.objects.create(user=user, course=course)
+            message = "Подписка добавлена"
+        return Response({"message": message})
