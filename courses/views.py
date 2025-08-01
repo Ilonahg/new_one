@@ -1,56 +1,72 @@
-# courses/views.py
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView, UpdateAPIView, DestroyAPIView
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
-from .models import Course, Lesson, Subscription
-from .serializers import CourseSerializer, LessonSerializer
-from .paginators import CustomPagination
 
-# ==== CRUD для курсов ====
-class CourseListView(ListAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-    pagination_class = CustomPagination
+from .models import Course, Payment, Subscription
+from .services import create_stripe_session
+from .serializers import PaymentSerializer, SubscribeSerializer   # 👈 добавили
+from django.http import HttpResponse
 
-class CourseDetailView(RetrieveAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-
-class CourseCreateView(CreateAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-
-class CourseUpdateView(UpdateAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-
-class CourseDeleteView(DestroyAPIView):
-    queryset = Course.objects.all()
-    serializer_class = CourseSerializer
-
-# ==== CRUD для уроков ====
-class LessonListView(ListAPIView):
-    queryset = Lesson.objects.all()
-    serializer_class = LessonSerializer
-    pagination_class = CustomPagination
-
-class LessonCreateView(CreateAPIView):
-    queryset = Lesson.objects.all()
-    serializer_class = LessonSerializer
-
-# ==== Подписки ====
 class SubscriptionView(APIView):
+    """
+    ✅ POST /subscribe/ – подписка или отписка пользователя от курса.
+    Если подписки нет – создаём. Если есть – удаляем.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = SubscribeSerializer   # 👈 добавили
+
     def post(self, request):
-        user = request.user
-        course_id = request.data.get("course_id")
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        course_id = serializer.validated_data["course_id"]
+
         course = get_object_or_404(Course, id=course_id)
 
-        subscription = Subscription.objects.filter(user=user, course=course)
-        if subscription.exists():
+        subscription, created = Subscription.objects.get_or_create(
+            user=request.user,
+            course=course
+        )
+
+        if not created:
             subscription.delete()
             message = "Подписка удалена"
         else:
-            Subscription.objects.create(user=user, course=course)
             message = "Подписка добавлена"
+
         return Response({"message": message})
+
+
+class PaymentView(APIView):
+    """
+    ✅ POST /pay/ – создаёт Stripe-сессию оплаты и возвращает ссылку.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = PaymentSerializer   # 👈 добавили
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        course_id = serializer.validated_data["course_id"]
+
+        course = get_object_or_404(Course, id=course_id)
+
+        # Создаём Stripe-сессию
+        session = create_stripe_session(course)
+
+        # Сохраняем платёж в базе
+        Payment.objects.create(
+            course=course,
+            user=request.user,
+            session_id=session.id,
+            link=session.url,
+            amount=course.price
+        )
+
+        return Response({"payment_url": session.url})
+
+def payment_success(request):
+    return HttpResponse("✅ Оплата прошла успешно!")
+
+def payment_cancel(request):
+    return HttpResponse("❌ Оплата была отменена.")

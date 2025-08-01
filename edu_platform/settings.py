@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 from decouple import config
+import stripe
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,11 +26,16 @@ INSTALLED_APPS = [
     'materials',
 
     'rest_framework_simplejwt',
+'drf_spectacular',
+    'drf_spectacular_sidecar',
+'corsheaders',
 ]
 
+
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',   # ✅ добавляем
+        'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
@@ -38,6 +44,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -86,3 +93,8 @@ STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.CustomUser'
 
+
+
+STRIPE_SECRET_KEY = "sk_test_51RousBPs6CVHZR3GyHY6PEPsvkUNmv4z8XAgzhgvWbQc8YVG2zGFd9uHJPbgD0JyYm1kxfyD4gT9Ub7l9edKhGrs00yDmDZP8q"
+stripe.api_key = STRIPE_SECRET_KEY
+CORS_ALLOW_ALL_ORIGINS = True

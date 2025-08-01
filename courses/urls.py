@@ -1,19 +1,10 @@
-# courses/urls.py
 from django.urls import path
-from .views import (
-    CourseListView, CourseDetailView, CourseCreateView, CourseUpdateView, CourseDeleteView,
-    LessonListView, LessonCreateView, SubscriptionView
-)
-
+from .views import PaymentView, SubscriptionView   # оставляем только Stripe и подписку
+from django.urls import path
+from .views import payment_success, payment_cancel
 urlpatterns = [
-    path('courses/', CourseListView.as_view()),
-    path('courses/<int:pk>/', CourseDetailView.as_view()),
-    path('courses/create/', CourseCreateView.as_view()),
-    path('courses/update/<int:pk>/', CourseUpdateView.as_view()),
-    path('courses/delete/<int:pk>/', CourseDeleteView.as_view()),
-
-    path('lessons/', LessonListView.as_view()),
-    path('lessons/create/', LessonCreateView.as_view()),
-
-    path('subscribe/', SubscriptionView.as_view()),  # POST {course_id: 1}
+    path('subscribe/', SubscriptionView.as_view(), name='subscribe'),
+    path('pay/', PaymentView.as_view(), name='payment'),  # Stripe оплата
+    path('payment/success', payment_success, name='payment_success'),
+    path('payment/cancel', payment_cancel, name='payment_cancel'),
 ]
