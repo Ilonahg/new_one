@@ -29,6 +29,8 @@ INSTALLED_APPS = [
 'drf_spectacular',
     'drf_spectacular_sidecar',
 'corsheaders',
+    'django_celery_beat',
+    'django_celery_results',
 ]
 
 
@@ -98,3 +100,8 @@ AUTH_USER_MODEL = 'users.CustomUser'
 STRIPE_SECRET_KEY = "sk_test_51RousBPs6CVHZR3GyHY6PEPsvkUNmv4z8XAgzhgvWbQc8YVG2zGFd9uHJPbgD0JyYm1kxfyD4gT9Ub7l9edKhGrs00yDmDZP8q"
 stripe.api_key = STRIPE_SECRET_KEY
 CORS_ALLOW_ALL_ORIGINS = True
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_TIMEZONE = 'Europe/Kiev'
+CELERY_ENABLE_UTC = False
