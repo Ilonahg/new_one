@@ -1,7 +1,5 @@
 Django>=4.2
 djangorestframework
-django-filter
-Pillow
-
-python-dotenv>=1.0.0
-python-decouple>=3.6
+drf-yasg   # для документации (если у тебя она используется)
+stripe     # для платежей (лучше чем requests)
+requests   # если ты продолжаешь использовать
