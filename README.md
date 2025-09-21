@@ -27,3 +27,20 @@
 
 ```bash
 celery -A edu_platform worker --loglevel=info
+
+## Подписка — проверка авторизации
+
+POST `/subscribe/` с телом `{"course_id": <ID>}`
+
+- Авторизован: `201` при первом POST (подписка), `200` при повторном (отписка).
+- Неавторизован: `401/403`.
+
+![201](docs/screens/subscribe/01_auth_add_201.png)
+![200](docs/screens/subscribe/02_auth_delete_200.png)
+![401/403](docs/screens/subscribe/03_unauth_401-403.png)
+
+### Быстрый старт
+```bash
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
