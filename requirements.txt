@@ -1,5 +1,13 @@
-Django>=4.2
-djangorestframework
-drf-yasg   # для документации (если у тебя она используется)
-stripe     # для платежей (лучше чем requests)
-requests   # если ты продолжаешь использовать
+Django>=5.0
+djangorestframework>=3.15
+celery>=5.3
+redis>=5.0
+django-celery-beat>=2.6
+django-celery-results>=2.5
+python-dotenv>=1.0
+psycopg2-binary>=2.9  # если используешь Postgres; иначе удали
+requests>=2.32
+python-dotenv>=1.0
+python-decouple>=3.8
+django-cors-headers>=4.4
+stripe>=5
