@@ -22,13 +22,13 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'users',
-'courses',
-    'materials',
+    'courses',
+    #'materials_backup',
 
     'rest_framework_simplejwt',
-'drf_spectacular',
+    'drf_spectacular',
     'drf_spectacular_sidecar',
-'corsheaders',
+    'corsheaders',
     'django_celery_beat',
     'django_celery_results',
 ]
@@ -77,14 +77,12 @@ WSGI_APPLICATION = 'edu_platform.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config("POSTGRES_DB"),
-        'USER': config("POSTGRES_USER"),
-        'PASSWORD': config("POSTGRES_PASSWORD"),
-        'HOST': config("POSTGRES_HOST"),
-        'PORT': config("POSTGRES_PORT"),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+
 
 AUTH_PASSWORD_VALIDATORS = []
 LANGUAGE_CODE = 'en-us'
@@ -101,7 +99,11 @@ STRIPE_SECRET_KEY = "sk_test_51RousBPs6CVHZR3GyHY6PEPsvkUNmv4z8XAgzhgvWbQc8YVG2z
 stripe.api_key = STRIPE_SECRET_KEY
 CORS_ALLOW_ALL_ORIGINS = True
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'memory://'
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_TIMEZONE = 'Europe/Kiev'
 CELERY_ENABLE_UTC = False
+
+# --- EMAIL CONFIGURATION ---
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@example.com'

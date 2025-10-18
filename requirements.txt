@@ -1,7 +1,17 @@
-Django>=4.2
-djangorestframework
-django-filter
-Pillow
+Django==5.0.2
+djangorestframework==3.15.1
+django-cors-headers==4.3.1
 
-python-dotenv>=1.0.0
-python-decouple>=3.6
+# Celery и планировщик задач
+celery==5.3.4
+django-celery-beat==2.6.0
+django-celery-results==2.5.1
+redis==5.0.1
+
+# Stripe для оплаты
+stripe==9.4.0
+
+# Вспомогательные пакеты
+python-dotenv==1.0.0
+requests==2.31.0
+psycopg2-binary==2.9.9  # если используешь PostgreSQL
